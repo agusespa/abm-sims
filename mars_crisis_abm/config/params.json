@@ -1,0 +1,10 @@
+{
+    "CREW_SIZE": 15,
+    "ROBOT_COUNTS": {
+        "BioLabRobot": 10,
+        "MaintenanceRobot": 10,
+        "ConstructionRobot": 10,
+        "EVASpecialistRobot": 4,
+        "LogisticsRobot": 3
+    }
+}
