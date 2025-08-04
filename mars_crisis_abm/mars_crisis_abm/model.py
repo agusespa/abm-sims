@@ -88,33 +88,29 @@ class MarsModel(mesa.Model):
             "EVASpecialistRobot": EVASpecialistRobot,
             "LogisticsRobot": LogisticsRobot,
         }
+        
         for robot_type, count in self.robot_counts.items():
             robot_class = robot_classes.get(robot_type)
             if not robot_class:
-                raise ValueError("Error: failed to find robot class")
-
+                raise ValueError(f"Unknown robot type: {robot_type}")
+            
             for i in range(count):
                 robot = robot_class(self)
-                x, y = self._get_realistic_robot_position(robot_type, i, count)
-                self.grid.place_agent(robot, (x, y))
+                position = self._get_realistic_robot_position(robot_type, i,)
+                self.grid.place_agent(robot, position)
                 self.schedule.add(robot)
 
-    def _get_realistic_robot_position(self, robot_type, robot_index, total_count):
+    def _get_realistic_robot_position(self, robot_type, robot_index):
         available_zones = ROBOT_OPERATIONAL_ZONES[robot_type]
         if not available_zones:
-            raise ValueError(
-                f"No operational zones found for robot type '{robot_type}'"
-            )
+            raise ValueError(f"No operational zones found for robot type '{robot_type}'")
 
-        chosen_zone_code = (
-            available_zones[robot_index % len(available_zones)]
-            if len(available_zones) > 1 and total_count > 1
-            else self.random.choice(available_zones)
-        )
+        # Distribute robots evenly across available zones
+        chosen_zone_code = available_zones[robot_index % len(available_zones)]
+        
+        return self._find_valid_position_in_zone(chosen_zone_code)
 
-        return self._find_valid_position_in_zone(chosen_zone_code, robot_index)
-
-    def _find_valid_position_in_zone(self, zone_code, robot_index):
+    def _find_valid_position_in_zone(self, zone_code):
         if zone_code not in self.zones:
             raise ValueError(f"Zone with code '{zone_code}' not found")
 
@@ -122,41 +118,30 @@ class MarsModel(mesa.Model):
         if not available_positions:
             raise ValueError(f"No valid positions available in zone '{zone_code}'")
 
-        # For better distribution, divide positions into segments based on robot index
-        if len(available_positions) > 1:
-            segment_size = max(1, len(available_positions) // 10)
-            start_idx = (robot_index * segment_size) % len(available_positions)
-            end_idx = min(start_idx + segment_size, len(available_positions))
-            segment_positions = available_positions[start_idx:end_idx]
-            
-            if segment_positions:
-                return self.random.choice(segment_positions)
-        
-        # Fallback to any random position in the zone
         return self.random.choice(available_positions)
 
     def _create_human_agents(self):
         crew_size = self.config_params.get("CREW_SIZE")
         injured_count = int(crew_size * 0.7)
-        critical_count = crew_size - injured_count
 
-        for _ in range(injured_count):
-            human = Human(self, 85)
-            position = self._get_random_human_position()
-            self.grid.place_agent(human, position)
-            human.pos = position
-            self.schedule.add(human)
+        health_configs = [
+            (injured_count, 85),
+            (crew_size - injured_count, 65),
+        ]
 
-        for _ in range(critical_count):
-            human = Human(self, 65)
-            position = self._get_random_human_position()
-            self.grid.place_agent(human, position)
-            human.pos = position
-            self.schedule.add(human)
+        for count, health in health_configs:
+            for _ in range(count):
+                human = Human(self, health)
+                position = self._get_random_human_position()
+                self.grid.place_agent(human, position)
+                human.pos = position
+                self.schedule.add(human)
 
     def _get_random_human_position(self):
         preferred_zones = [ZoneCode.LAB.value, ZoneCode.HABITAT.value]
-        available_preferred_zones = [zone for zone in preferred_zones if zone in self.zones]
+        available_preferred_zones = [
+            zone for zone in preferred_zones if zone in self.zones
+        ]
         if not available_preferred_zones:
             raise ValueError("No preferred zones available for human placement")
         chosen_zone = self.random.choice(available_preferred_zones)
@@ -225,17 +210,11 @@ class MarsModel(mesa.Model):
 
         # Calculate power level based on power walls, hubs, and batteries
         power_hubs = [
-            agent
-            for agent in self.agents
-            if isinstance(agent, PowerDistributionHub)
+            agent for agent in self.agents if isinstance(agent, PowerDistributionHub)
         ]
-        batteries = [
-            agent for agent in self.agents if isinstance(agent, BatteryPack)
-        ]
+        batteries = [agent for agent in self.agents if isinstance(agent, BatteryPack)]
 
-        power_walls = [
-            agent for agent in self.agents if isinstance(agent, PowerWall)
-        ]
+        power_walls = [agent for agent in self.agents if isinstance(agent, PowerWall)]
 
         total_power_integrity = 0
         total_power_components = 0
@@ -268,9 +247,7 @@ class MarsModel(mesa.Model):
                     wall_damage_total += 100 - agent.integrity
 
         if damaged_walls_total > 0:
-            atmospheric_decrease = wall_damage_total / (
-                100 * damaged_walls_total * 8
-            )
+            atmospheric_decrease = wall_damage_total / (100 * damaged_walls_total * 8)
 
         # Add fire impact on atmosphere
         fire_strength_total = sum(
@@ -280,9 +257,7 @@ class MarsModel(mesa.Model):
         )
 
         if fire_strength_total > 0:
-            atmospheric_decrease += (
-                fire_strength_total / 800
-            )
+            atmospheric_decrease += fire_strength_total / 800
 
         # Calculate contamination level and add impact on atmosphere
         hazmat_storage = [
@@ -348,7 +323,8 @@ class MarsModel(mesa.Model):
             [
                 agent
                 for agent in self.agents
-                if isinstance(agent, (HabitatWall, ExternalWall)) and agent.integrity < 80
+                if isinstance(agent, (HabitatWall, ExternalWall))
+                and agent.integrity < 80
             ]
         )
 
@@ -435,7 +411,10 @@ class MarsModel(mesa.Model):
                 if isinstance(agent, Robot)
                 and not (hasattr(agent, "current_task") and agent.current_task)
                 and not (hasattr(agent, "is_recharging") and agent.is_recharging)
-                and (not hasattr(agent, "_is_connected_to_network") or agent._is_connected_to_network())
+                and (
+                    not hasattr(agent, "_is_connected_to_network")
+                    or agent._is_connected_to_network()
+                )
             ]
         )
 
@@ -444,10 +423,14 @@ class MarsModel(mesa.Model):
         for agent in self.agents:
             if isinstance(agent, Robot):
                 try:
-                    if (not (hasattr(agent, "current_task") and agent.current_task) 
-                        and not (hasattr(agent, "is_recharging") and agent.is_recharging)
-                        and hasattr(agent, "_is_connected_to_network") 
-                        and not agent._is_connected_to_network()):
+                    if (
+                        not (hasattr(agent, "current_task") and agent.current_task)
+                        and not (
+                            hasattr(agent, "is_recharging") and agent.is_recharging
+                        )
+                        and hasattr(agent, "_is_connected_to_network")
+                        and not agent._is_connected_to_network()
+                    ):
                         count += 1
                 except:
                     pass
