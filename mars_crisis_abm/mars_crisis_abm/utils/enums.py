@@ -17,11 +17,18 @@ class Capability(Enum):
     POWER_EXT_DETECT = "power-ext_detect"
     POWER_EXT = "power-ext"
 
+    CONTROL_DETECT = "control_detect"
     CONTROL = "control"
 
     SUPPLIES = "supplies"
     FIRE_SUPPLIES = "fire-supplies"
     MATERIALS = "materials"
+
+
+class InventoryType(Enum):
+    SUPPLIES = "supplies"
+    MATERIALS = "materials"
+    FIRE_POWDER = "fire_powder"
 
 
 class OperatingEnvironment(Enum):

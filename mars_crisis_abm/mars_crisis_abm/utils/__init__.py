@@ -7,6 +7,7 @@ from .constants import (
     BASE_FIX_RATE,
     DEFAULT_COMMUNICATION_RANGE,
     FIRE_INTENSITY_INCREASE_RATE,
+    FIRE_SUPPRESSION_RATE,
     INITIAL_HEALTH,
     CRITICAL_HEALTH_THRESHOLD,
     BASE_INJURE_RATE,
@@ -18,6 +19,7 @@ from .enums import (
     Capability,
     OperatingEnvironment,
     ZoneCode,
+    InventoryType,
     ZONE_ENVIRONMENT_MAP,
     ROBOT_OPERATIONAL_ZONES
 )
@@ -50,6 +52,7 @@ __all__ = [
     'BASE_FIX_RATE',
     'DEFAULT_COMMUNICATION_RANGE',
     'FIRE_INTENSITY_INCREASE_RATE',
+    'FIRE_SUPPRESSION_RATE',
     'INITIAL_HEALTH',
     'CRITICAL_HEALTH_THRESHOLD',
     'BASE_INJURE_RATE',
@@ -59,6 +62,7 @@ __all__ = [
     'Capability',
     'OperatingEnvironment',
     'ZoneCode',
+    'InventoryType',
     'ZONE_ENVIRONMENT_MAP',
     'ROBOT_OPERATIONAL_ZONES',
     

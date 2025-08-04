@@ -212,13 +212,16 @@ class MarsModel(mesa.Model):
         if self.power_level <= 0:
             self.fire_alarm_on = False
         else:
+            has_fire = False
             for agent in self.agents:
                 if (
                     isinstance(agent, ComplexStructure)
                     and hasattr(agent, "fire_intensity")
                     and agent.fire_intensity > 0
                 ):
-                    self.fire_alarm_on = True
+                    has_fire = True
+                    break
+            self.fire_alarm_on = has_fire
 
         # Calculate power level based on power walls, hubs, and batteries
         power_hubs = [
