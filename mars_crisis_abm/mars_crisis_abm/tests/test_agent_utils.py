@@ -1,6 +1,5 @@
 import pytest
-from mars_crisis_abm.utils.enums import OperatingEnvironment, ZoneCode
-from mars_crisis_abm.utils.agent_utils import get_zones_by_type
+from mars_crisis_abm.utils import OperatingEnvironment, ZoneCode, get_zones_by_type
 
 @pytest.fixture
 def mock_zones():

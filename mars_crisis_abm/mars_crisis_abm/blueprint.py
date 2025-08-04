@@ -1,5 +1,5 @@
 from .agents import HabitatWall, ExternalWall, PowerWall
-from .utils.enums import ZONE_ENVIRONMENT_MAP, ZoneCode
+from .utils import ZONE_ENVIRONMENT_MAP, ZoneCode
 
 
 def build_base_from_blueprint(model, grid_data):

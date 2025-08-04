@@ -15,14 +15,11 @@ from .agents import (
     PowerDistributionHub,
     BatteryPack,
     HazardousMaterialsStorage,
-    ZoneCode,
     HabitatWall,
     ExternalWall,
     PowerWall,
 )
-from .utils.constants import STABILITY_THRESHOLDS
-
-from .utils.enums import ROBOT_OPERATIONAL_ZONES
+from .utils import STABILITY_THRESHOLDS, ROBOT_OPERATIONAL_ZONES, ZoneCode
 
 
 class MarsModel(mesa.Model):

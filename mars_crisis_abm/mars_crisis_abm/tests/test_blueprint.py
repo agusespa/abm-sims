@@ -2,7 +2,7 @@ import pytest
 from unittest.mock import MagicMock, patch
 from mars_crisis_abm.blueprint import build_base_from_blueprint, _create_wall_agents, _get_wall_integrity
 from mars_crisis_abm.agents import HabitatWall, ExternalWall, PowerWall
-from mars_crisis_abm.utils.enums import OperatingEnvironment
+from mars_crisis_abm.utils import OperatingEnvironment
 
 @pytest.fixture
 def model():

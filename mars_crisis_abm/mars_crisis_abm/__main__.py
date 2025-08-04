@@ -4,7 +4,7 @@ This file makes the package executable with: python -m mars_crisis_abm
 """
 
 from .model import MarsModel
-from .utils.model_utils import load_config, load_grid_layout_csv
+from .utils import load_config, load_grid_layout_csv
 import sys
 
 

@@ -8,8 +8,7 @@ from mars_crisis_abm.agents import (
     ExternalWall,
     PowerWall,
 )
-from mars_crisis_abm.utils.enums import OperatingEnvironment, ZoneCode
-from mars_crisis_abm.utils.agent_utils import get_zones_by_type
+from mars_crisis_abm.utils import OperatingEnvironment, ZoneCode, get_zones_by_type
 
 
 @pytest.fixture

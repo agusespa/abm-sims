@@ -3,7 +3,7 @@ import json
 import tempfile
 import os
 from mars_crisis_abm.model import MarsModel
-from mars_crisis_abm.utils.model_utils import load_grid_layout_csv
+from mars_crisis_abm.utils import load_grid_layout_csv
 
 
 @pytest.fixture
