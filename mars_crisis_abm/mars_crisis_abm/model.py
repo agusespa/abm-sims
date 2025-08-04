@@ -63,6 +63,9 @@ class MarsModel(mesa.Model):
                 "Damaged Equipment": lambda m: m._count_damaged_equipment(),
                 "Active Fires": lambda m: m._count_active_fires(),
                 "Recharging Robots": lambda m: m._count_recharging_robots(),
+                "Working Robots": lambda m: m._count_working_robots(),
+                "Idle Robots": lambda m: m._count_idle_robots(),
+                "Searching Robots": lambda m: m._count_searching_robots(),
             }
         )
 
@@ -408,3 +411,41 @@ class MarsModel(mesa.Model):
                 and agent.is_recharging
             ]
         )
+
+    def _count_working_robots(self):
+        return len(
+            [
+                agent
+                for agent in self.agents
+                if isinstance(agent, Robot)
+                and hasattr(agent, "current_task")
+                and agent.current_task
+                and not (hasattr(agent, "is_recharging") and agent.is_recharging)
+            ]
+        )
+
+    def _count_idle_robots(self):
+        return len(
+            [
+                agent
+                for agent in self.agents
+                if isinstance(agent, Robot)
+                and not (hasattr(agent, "current_task") and agent.current_task)
+                and not (hasattr(agent, "is_recharging") and agent.is_recharging)
+                and (not hasattr(agent, "_is_connected_to_network") or agent._is_connected_to_network())
+            ]
+        )
+
+    def _count_searching_robots(self):
+        count = 0
+        for agent in self.agents:
+            if isinstance(agent, Robot):
+                try:
+                    if (not (hasattr(agent, "current_task") and agent.current_task) 
+                        and not (hasattr(agent, "is_recharging") and agent.is_recharging)
+                        and hasattr(agent, "_is_connected_to_network") 
+                        and not agent._is_connected_to_network()):
+                        count += 1
+                except:
+                    pass
+        return count
