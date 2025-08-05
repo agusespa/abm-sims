@@ -1,6 +1,6 @@
 import mesa
 
-from . import blueprint
+from .blueprint import setup_mars_base
 
 from .agents import (
     Robot,
@@ -41,7 +41,9 @@ class MarsModel(mesa.Model):
         self.power_level = STABILITY_THRESHOLDS["power"] - 10
 
         # Set up the entire Mars base using blueprint
-        blueprint.setup_mars_base(self, self.grid_data, self.equipment_positions, self.config_params)
+        setup_mars_base(
+            self, self.grid_data, self.equipment_positions, self.config_params
+        )
 
         self.datacollector = mesa.DataCollector(
             model_reporters={
@@ -71,8 +73,6 @@ class MarsModel(mesa.Model):
         self.mission_status = self._check_mission_status()
         if self.mission_status != "ONGOING":
             self.running = False
-
-
 
     def _update_system_status(self):
         # Update communications status
@@ -160,9 +160,7 @@ class MarsModel(mesa.Model):
             contamination_total += 100 - storage.integrity
 
         if contamination_total > 0:
-            contamination_decrease = contamination_total / (
-                100 * 6
-            )
+            contamination_decrease = contamination_total / (100 * 6)
 
         self.contamination_level = contamination_decrease * 100
 
