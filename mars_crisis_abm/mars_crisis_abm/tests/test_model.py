@@ -174,9 +174,6 @@ def test_update_system_status_fire_alarm(model):
     assert model.fire_alarm_on is False
 
 
-
-
-
 def test_get_zones_by_type_mixed(model_with_zones):
     mixed_zones = get_zones_by_type(model_with_zones.zones, OperatingEnvironment.MIXED)
     expected_zones = [
@@ -190,7 +187,9 @@ def test_get_zones_by_type_mixed(model_with_zones):
 
 
 def test_get_zones_by_type_internal(model_with_zones):
-    internal_zones = get_zones_by_type(model_with_zones.zones, OperatingEnvironment.INTERNAL)
+    internal_zones = get_zones_by_type(
+        model_with_zones.zones, OperatingEnvironment.INTERNAL
+    )
     expected_zones = [
         ZoneCode.LAB.value,
         ZoneCode.HABITAT.value,
@@ -201,6 +200,8 @@ def test_get_zones_by_type_internal(model_with_zones):
 
 
 def test_get_zones_by_type_external(model_with_zones):
-    external_zones = get_zones_by_type(model_with_zones.zones, OperatingEnvironment.EXTERNAL)
+    external_zones = get_zones_by_type(
+        model_with_zones.zones, OperatingEnvironment.EXTERNAL
+    )
     expected_zones = [ZoneCode.OUTDOORS.value]
     assert sorted(external_zones) == sorted(expected_zones)

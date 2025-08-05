@@ -5,11 +5,6 @@ from . import blueprint
 from .agents import (
     Robot,
     ComplexStructure,
-    BioLabRobot,
-    MaintenanceRobot,
-    ConstructionRobot,
-    EVASpecialistRobot,
-    LogisticsRobot,
     Human,
     CentralCommunicationsSystem,
     PowerDistributionHub,
@@ -19,7 +14,7 @@ from .agents import (
     ExternalWall,
     PowerWall,
 )
-from .utils import STABILITY_THRESHOLDS, ROBOT_OPERATIONAL_ZONES, ZoneCode
+from .utils import STABILITY_THRESHOLDS
 
 
 class MarsModel(mesa.Model):
@@ -38,7 +33,6 @@ class MarsModel(mesa.Model):
 
         self.zones = {}
         self.equipment_positions = equipment_positions
-        blueprint.build_base_from_blueprint(self, self.grid_data)
 
         self.communications_online = False
         self.fire_alarm_on = False
@@ -46,10 +40,8 @@ class MarsModel(mesa.Model):
         self.contamination_level = 0.0
         self.power_level = STABILITY_THRESHOLDS["power"] - 10
 
-        self._create_equipment_agents()
-        self._create_human_agents()
-        self.robot_counts = config_params["ROBOT_COUNTS"]
-        self._create_robot_agents()
+        # Set up the entire Mars base using blueprint
+        blueprint.setup_mars_base(self, self.grid_data, self.equipment_positions, self.config_params)
 
         self.datacollector = mesa.DataCollector(
             model_reporters={
@@ -80,106 +72,7 @@ class MarsModel(mesa.Model):
         if self.mission_status != "ONGOING":
             self.running = False
 
-    def _create_robot_agents(self):
-        robot_classes = {
-            "BioLabRobot": BioLabRobot,
-            "MaintenanceRobot": MaintenanceRobot,
-            "ConstructionRobot": ConstructionRobot,
-            "EVASpecialistRobot": EVASpecialistRobot,
-            "LogisticsRobot": LogisticsRobot,
-        }
-        
-        for robot_type, count in self.robot_counts.items():
-            robot_class = robot_classes.get(robot_type)
-            if not robot_class:
-                raise ValueError(f"Unknown robot type: {robot_type}")
-            
-            for i in range(count):
-                robot = robot_class(self)
-                position = self._get_realistic_robot_position(robot_type, i,)
-                self.grid.place_agent(robot, position)
-                self.schedule.add(robot)
 
-    def _get_realistic_robot_position(self, robot_type, robot_index):
-        available_zones = ROBOT_OPERATIONAL_ZONES[robot_type]
-        if not available_zones:
-            raise ValueError(f"No operational zones found for robot type '{robot_type}'")
-
-        # Distribute robots evenly across available zones
-        chosen_zone_code = available_zones[robot_index % len(available_zones)]
-        
-        return self._find_valid_position_in_zone(chosen_zone_code)
-
-    def _find_valid_position_in_zone(self, zone_code):
-        if zone_code not in self.zones:
-            raise ValueError(f"Zone with code '{zone_code}' not found")
-
-        available_positions = self.zones[zone_code]["positions"]
-        if not available_positions:
-            raise ValueError(f"No valid positions available in zone '{zone_code}'")
-
-        return self.random.choice(available_positions)
-
-    def _create_human_agents(self):
-        crew_size = self.config_params.get("CREW_SIZE")
-        injured_count = int(crew_size * 0.7)
-
-        health_configs = [
-            (injured_count, 85),
-            (crew_size - injured_count, 65),
-        ]
-
-        for count, health in health_configs:
-            for _ in range(count):
-                human = Human(self, health)
-                position = self._get_random_human_position()
-                self.grid.place_agent(human, position)
-                human.pos = position
-                self.schedule.add(human)
-
-    def _get_random_human_position(self):
-        preferred_zones = [ZoneCode.LAB.value, ZoneCode.HABITAT.value]
-        available_preferred_zones = [
-            zone for zone in preferred_zones if zone in self.zones
-        ]
-        if not available_preferred_zones:
-            raise ValueError("No preferred zones available for human placement")
-        chosen_zone = self.random.choice(available_preferred_zones)
-        return self._get_equipment_position(chosen_zone)
-
-    def _create_equipment_agents(self):
-        equipment_classes = {
-            "CentralCommunicationsSystem": CentralCommunicationsSystem,
-            "PowerDistributionHub": PowerDistributionHub,
-            "BatteryPack": BatteryPack,
-            "HazardousMaterialsStorage": HazardousMaterialsStorage,
-        }
-
-        for equipment_data in self.equipment_positions:
-            equipment_type = equipment_data["type"]
-            equipment_class = equipment_classes.get(equipment_type)
-
-            if equipment_class:
-                initial_integrity = equipment_data["integrity"]
-                if equipment_type == "BatteryPack" and self.random.random() < 0.2:
-                    initial_integrity = 29
-
-                equipment = equipment_class(
-                    self,
-                    integrity=initial_integrity,
-                )
-                self.grid.place_agent(
-                    equipment, (equipment_data["x"], equipment_data["y"])
-                )
-                self.schedule.add(equipment)
-
-    def _get_equipment_position(self, zone_code):
-        if zone_code in self.zones:
-            available_positions = self.zones[zone_code]["positions"]
-            if not available_positions:
-                raise ValueError(f"No valid positions available in zone '{zone_code}'")
-            return self.random.choice(available_positions)
-        raise ValueError(f"Zone with code '{zone_code}' not found.")
 
     def _update_system_status(self):
         # Update communications status

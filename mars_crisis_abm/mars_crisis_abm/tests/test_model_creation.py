@@ -4,6 +4,7 @@ import tempfile
 import os
 from mars_crisis_abm.model import MarsModel
 from mars_crisis_abm.utils import load_grid_layout_csv
+from mars_crisis_abm.agents import Human, Robot, CentralCommunicationsSystem
 
 
 @pytest.fixture
@@ -57,6 +58,15 @@ def test_model_creation_simple(config_params, grid_data_and_equipment):
     expected_width = len(grid_data[0])
     assert model.grid.width == expected_width
     assert model.grid.height == expected_height
+
+    # Verify that agents were created by blueprint
+    humans = [agent for agent in model.schedule.agents if isinstance(agent, Human)]
+    robots = [agent for agent in model.schedule.agents if isinstance(agent, Robot)]
+    comm_systems = [agent for agent in model.schedule.agents if isinstance(agent, CentralCommunicationsSystem)]
+    
+    assert len(humans) == config_params["CREW_SIZE"]
+    assert len(robots) == sum(config_params["ROBOT_COUNTS"].values())
+    assert len(comm_systems) == 1  # Should have one communications system
 
 
 def test_csv_loading(grid_data_and_equipment):
