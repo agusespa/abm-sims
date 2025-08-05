@@ -208,10 +208,7 @@ class MarsModel(mesa.Model):
                     break
             self.fire_alarm_on = has_fire
 
-        # Calculate power level based on power walls, hubs, and batteries
-        power_hubs = [
-            agent for agent in self.agents if isinstance(agent, PowerDistributionHub)
-        ]
+        # Calculate power level based on power walls and batteries
         batteries = [agent for agent in self.agents if isinstance(agent, BatteryPack)]
 
         power_walls = [agent for agent in self.agents if isinstance(agent, PowerWall)]
@@ -221,10 +218,6 @@ class MarsModel(mesa.Model):
 
         for wall in power_walls:
             total_power_integrity += wall.integrity
-            total_power_components += 1
-
-        for hub in power_hubs:
-            total_power_integrity += hub.integrity
             total_power_components += 1
 
         for battery in batteries:
@@ -276,7 +269,7 @@ class MarsModel(mesa.Model):
         if contamination_total > 0:
             contamination_decrease = contamination_total / (
                 100 * 6
-            )  # Further reduced contamination impact
+            )
 
         self.contamination_level = contamination_decrease * 100
 
